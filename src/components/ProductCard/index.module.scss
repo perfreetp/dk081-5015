@@ -1,0 +1,122 @@
+@use '@/styles/variables.scss' as *;
+
+.card {
+  display: flex;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.99);
+  }
+}
+
+.imageWrap {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: $radius-md;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.highRiskTag {
+  position: absolute;
+  top: 8rpx;
+  left: 8rpx;
+  background: rgba(255, 125, 0, 0.9);
+  color: #fff;
+  font-size: $font-size-xs;
+  padding: 4rpx 10rpx;
+  border-radius: $radius-xs;
+}
+
+.info {
+  flex: 1;
+  margin-left: $spacing-md;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.title {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  @include text-ellipsis-multi(2);
+  line-height: 1.4;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  margin-top: 8rpx;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4rpx 12rpx;
+  border-radius: $radius-xs;
+  font-size: $font-size-xs;
+  white-space: nowrap;
+}
+
+.tagCondition {
+  background: rgba(82, 196, 165, 0.1);
+  color: $color-secondary;
+}
+
+.tagHygiene {
+  background: rgba(0, 180, 42, 0.1);
+  color: $color-health;
+}
+
+.tagTransfer {
+  background: $color-bg-tag;
+  color: $color-primary;
+}
+
+.bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8rpx;
+}
+
+.price {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-price;
+
+  .symbol {
+    font-size: $font-size-sm;
+    margin-right: 2rpx;
+  }
+}
+
+.originalPrice {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  text-decoration: line-through;
+  margin-left: 8rpx;
+}
+
+.location {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: flex;
+  align-items: center;
+}

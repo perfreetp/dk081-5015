@@ -1,0 +1,289 @@
+@use '@/styles/variables.scss' as *;
+
+.card {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8rpx;
+  background: linear-gradient(90deg, $color-primary 0%, $color-secondary 100%);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: $spacing-md;
+}
+
+.title {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  flex: 1;
+  @include text-ellipsis;
+}
+
+.healthBadge {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 180, 42, 0.1);
+  color: $color-health;
+  padding: 8rpx 16rpx;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  margin-left: $spacing-sm;
+  flex-shrink: 0;
+}
+
+.productInfo {
+  display: flex;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-md;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.productImage {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: $radius-md;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.productDetail {
+  flex: 1;
+  margin-left: $spacing-md;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.productName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  @include text-ellipsis-multi(2);
+  line-height: 1.4;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  margin-top: 8rpx;
+}
+
+.tag {
+  padding: 4rpx 12rpx;
+  border-radius: $radius-xs;
+  font-size: $font-size-xs;
+  white-space: nowrap;
+}
+
+.tagCondition {
+  background: rgba(82, 196, 165, 0.1);
+  color: $color-secondary;
+}
+
+.tagMonths {
+  background: $color-bg-tag;
+  color: $color-primary;
+}
+
+.section {
+  margin-bottom: $spacing-md;
+}
+
+.sectionTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+  display: flex;
+  align-items: center;
+}
+
+.sectionIcon {
+  margin-right: 8rpx;
+}
+
+.recordItem {
+  background: $color-bg-hover;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+}
+
+.recordHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+}
+
+.recordDate {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.recordMethod {
+  font-size: $font-size-sm;
+  color: $color-secondary;
+  font-weight: $font-weight-medium;
+}
+
+.recordMaterials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  margin-top: 8rpx;
+}
+
+.materialTag {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  background: #fff;
+  padding: 4rpx 10rpx;
+  border-radius: $radius-xs;
+}
+
+.photoPreview {
+  display: flex;
+  gap: $spacing-sm;
+  margin-top: $spacing-sm;
+}
+
+.photoItem {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: $radius-sm;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.photo {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.transferHistory {
+  position: relative;
+  padding-left: $spacing-lg;
+}
+
+.transferHistory::before {
+  content: '';
+  position: absolute;
+  left: 12rpx;
+  top: 10rpx;
+  bottom: 0;
+  width: 2rpx;
+  background: $color-border;
+}
+
+.transferItem {
+  position: relative;
+  padding-bottom: $spacing-md;
+}
+
+.transferItem::before {
+  content: '';
+  position: absolute;
+  left: -36rpx;
+  top: 8rpx;
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background: $color-primary;
+  border: 4rpx solid #fff;
+  box-shadow: 0 0 0 2rpx $color-primary;
+}
+
+.transferInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.transferUser {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+.transferDate {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.transferPrice {
+  font-size: $font-size-sm;
+  color: $color-price;
+  margin-top: 4rpx;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: $spacing-md;
+  border-top: 1rpx solid $color-divider;
+}
+
+.scores {
+  display: flex;
+  gap: $spacing-lg;
+}
+
+.scoreItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.scoreValue {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+}
+
+.scoreLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+}
+
+.qrBtn {
+  @include button-reset;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: #fff;
+  height: $button-height-md;
+  padding: 0 $spacing-lg;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}

@@ -1,0 +1,131 @@
+@use '@/styles/variables.scss' as *;
+
+.bubble {
+  display: flex;
+  margin-bottom: $spacing-md;
+  max-width: 100%;
+}
+
+.self {
+  justify-content: flex-end;
+}
+
+.other {
+  justify-content: flex-start;
+}
+
+.avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.content {
+  max-width: 70%;
+  margin: 0 $spacing-sm;
+  display: flex;
+  flex-direction: column;
+}
+
+.self .content {
+  align-items: flex-end;
+}
+
+.other .content {
+  align-items: flex-start;
+}
+
+.userName {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: 8rpx;
+}
+
+.messageContent {
+  padding: $spacing-md $spacing-lg;
+  border-radius: $radius-lg;
+  line-height: 1.6;
+  word-break: break-word;
+  font-size: $font-size-md;
+}
+
+.self .messageContent {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: #fff;
+  border-bottom-right-radius: 8rpx;
+}
+
+.other .messageContent {
+  background: $color-bg-card;
+  color: $color-text-primary;
+  border-bottom-left-radius: 8rpx;
+  box-shadow: $shadow-card;
+}
+
+.qaContent {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  margin: 0 $spacing-sm;
+  max-width: 80%;
+  border: 2rpx solid $color-border;
+}
+
+.qaQuestion {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-sm;
+  display: flex;
+  align-items: center;
+}
+
+.qaIcon {
+  margin-right: 8rpx;
+}
+
+.qaAnswer {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  background: rgba(82, 196, 165, 0.1);
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  line-height: 1.5;
+}
+
+.systemMessage {
+  width: 100%;
+  text-align: center;
+  margin: $spacing-md 0;
+}
+
+.systemContent {
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.1);
+  color: $color-text-tertiary;
+  font-size: $font-size-xs;
+  padding: 8rpx $spacing-md;
+  border-radius: $radius-button;
+}
+
+.timestamp {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 8rpx;
+}
+
+.self .timestamp {
+  text-align: right;
+}
+
+.other .timestamp {
+  text-align: left;
+}

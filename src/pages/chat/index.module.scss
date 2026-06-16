@@ -1,0 +1,410 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: $color-bg-page;
+  display: flex;
+  flex-direction: column;
+}
+
+.conversationList {
+  flex: 1;
+  background: $color-bg-page;
+}
+
+.conversationItem {
+  display: flex;
+  background: $color-bg-card;
+  padding: $spacing-lg $page-padding;
+  border-bottom: 1rpx solid $color-divider;
+  transition: all $transition-base;
+
+  &:active {
+    background: $color-bg-hover;
+  }
+}
+
+.avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  margin-right: $spacing-md;
+  flex-shrink: 0;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+.conversationContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.conversationHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.conversationName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.conversationTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+  margin-left: $spacing-sm;
+}
+
+.conversationPreview {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.previewText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: $spacing-sm;
+}
+
+.badge {
+  min-width: 36rpx;
+  height: 36rpx;
+  background: $color-primary;
+  color: #fff;
+  border-radius: 18rpx;
+  font-size: $font-size-xs;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10rpx;
+  flex-shrink: 0;
+}
+
+.chatContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f5;
+}
+
+.productBar {
+  display: flex;
+  background: $color-bg-card;
+  padding: $spacing-md $page-padding;
+  border-bottom: 1rpx solid $color-divider;
+  align-items: center;
+  gap: $spacing-md;
+}
+
+.productThumb {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: $radius-md;
+  background: $color-bg-hover;
+  flex-shrink: 0;
+}
+
+.productInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.productTitle {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.4;
+}
+
+.productPrice {
+  font-size: $font-size-md;
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+  margin-top: 8rpx;
+}
+
+.backBtn {
+  @include button-reset;
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  background: $color-bg-hover;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-right: $spacing-sm;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.messagesList {
+  flex: 1;
+  padding: $spacing-md $page-padding;
+}
+
+.messagesContent {
+  padding-bottom: 160rpx;
+}
+
+.dateDivider {
+  text-align: center;
+  margin: $spacing-lg 0;
+}
+
+.dateText {
+  display: inline-block;
+  padding: 8rpx 24rpx;
+  background: rgba(0, 0, 0, 0.1);
+  color: #fff;
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+}
+
+.qaSection {
+  background: rgba(255, 107, 154, 0.1);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin: $spacing-md 0;
+  border: 2rpx dashed rgba(255, 107, 154, 0.2);
+}
+
+.qaTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+}
+
+.qaIcon {
+  margin-right: 8rpx;
+}
+
+.qaItem {
+  margin-bottom: $spacing-md;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.qaQuestion {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+  margin-bottom: 8rpx;
+}
+
+.qaAnswer {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  background: #fff;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+}
+
+.qaNote {
+  margin-top: $spacing-md;
+  padding-top: $spacing-md;
+  border-top: 1rpx dashed rgba(255, 107, 154, 0.2);
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  line-height: 1.6;
+}
+
+.qaNoteHighlight {
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+}
+
+.priceSection {
+  background: rgba(255, 107, 154, 0.1);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin: $spacing-md 0;
+  border: 2rpx solid rgba(255, 107, 154, 0.3);
+}
+
+.priceTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+  text-align: center;
+  margin-bottom: $spacing-md;
+}
+
+.priceActions {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.priceBtn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-md;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+
+  &:active {
+    opacity: 0.9;
+  }
+}
+
+.priceAccept {
+  background: $color-secondary;
+  color: #fff;
+}
+
+.priceDecline {
+  background: #fff;
+  border: 2rpx solid $color-border;
+  color: $color-text-secondary;
+}
+
+.inputArea {
+  background: $color-bg-card;
+  padding: $spacing-md $page-padding;
+  padding-bottom: calc(#{$spacing-md} + env(safe-area-inset-bottom));
+  border-top: 1rpx solid $color-divider;
+  display: flex;
+  align-items: flex-end;
+  gap: $spacing-sm;
+}
+
+.inputToolbar {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+  padding-bottom: $spacing-sm;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.toolBtn {
+  @include button-reset;
+  height: $button-height-sm;
+  padding: 0 $spacing-md;
+  background: $color-bg-hover;
+  color: $color-text-secondary;
+  border-radius: $radius-button;
+  font-size: $font-size-xs;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.toolActive {
+  background: rgba(255, 107, 154, 0.1);
+  color: $color-primary;
+}
+
+.inputWrapper {
+  flex: 1;
+  background: $color-bg-hover;
+  border-radius: $radius-lg;
+  padding: $spacing-sm $spacing-md;
+  min-height: 80rpx;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  flex: 1;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  max-height: 200rpx;
+}
+
+.sendBtn {
+  @include button-reset;
+  height: $button-height-md;
+  padding: 0 $spacing-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: #fff;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    background: $color-bg-hover;
+    color: $color-text-disabled;
+  }
+}
+
+.emptyList {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-xl * 2 $page-padding;
+}
+
+.emptyIcon {
+  font-size: 120rpx;
+  margin-bottom: $spacing-md;
+  opacity: 0.5;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}
+
+.bargainBanner {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-md $page-padding;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  font-size: $font-size-sm;
+}
+
+.bargainBannerText {
+  font-weight: $font-weight-medium;
+}
+
+.qaConfirmed {
+  background: rgba(82, 196, 165, 0.1);
+  border: 2rpx solid rgba(82, 196, 165, 0.3);
+}
+
+.qaConfirmedTitle {
+  color: $color-secondary;
+}
