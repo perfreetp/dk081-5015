@@ -17,6 +17,7 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ visible, product, onClose }) 
   const [qrError, setQrError] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isPngFormat, setIsPngFormat] = useState(false);
 
   const avgDescriptionScore = useMemo(() => {
     if (!product || product.reviews.length === 0) return 5.0;
@@ -31,21 +32,23 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ visible, product, onClose }) 
   const qrContent = useMemo(() => {
     if (!product) return '';
 
-    const holderName = (product.currentHolderName || product.sellerName || '').substring(0, 16);
-    const title = (product.title || '').substring(0, 20);
-    const category = (product.categoryName || '').substring(0, 10);
+    const holderName = (product.currentHolderName || product.sellerName || '').substring(0, 14);
+    const title = (product.title || '').substring(0, 22);
     const disinfectionCount = product.disinfectionRecords.length;
     const transferCount = product.transferRecords.length;
-    const reviewCount = product.reviews.length;
     const hygieneScore = avgHygieneScore.toFixed(1);
     const descriptionScore = avgDescriptionScore.toFixed(1);
     const price = product.price || 0;
-    const status = product.status || 'published';
-    const productId = (product.id || '').substring(0, 16);
 
-    const content = `BR|1.0|${productId}|${title}|${category}|${holderName}|${disinfectionCount}|${transferCount}|${reviewCount}|${hygieneScore}|${descriptionScore}|${price}|${status}`;
+    const content = `消毒履历
+商品: ${title}
+持有人: ${holderName}
+消毒${disinfectionCount}次 转手${transferCount}次
+卫生${hygieneScore}★ 描述${descriptionScore}★
+¥${price} | 扫码看详情`;
 
-    console.log('[QrCodeModal] QR content (length=' + content.length + '):', content);
+    console.log('[QrCodeModal] QR readable content (length=' + content.length + '):');
+    console.log(content);
     return content;
   }, [product, avgHygieneScore, avgDescriptionScore]);
 
@@ -58,7 +61,17 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ visible, product, onClose }) 
   const shareText = useMemo(() => {
     if (!product) return '';
     const holderName = product.currentHolderName || product.sellerName || '';
-    return `【消毒履历】${product.title}\n品类: ${product.categoryName}\n当前持有人: ${holderName}\n消毒记录: ${product.disinfectionRecords.length}次\n转手次数: ${product.transferRecords.length}次\n卫生评分: ${avgHygieneScore.toFixed(1)}★\n描述一致: ${avgDescriptionScore.toFixed(1)}★\n价格: ¥${product.price}\n---\n扫码内容:\n${qrContent}`;
+    return `【消毒履历】${product.title}
+品类: ${product.categoryName}
+当前持有人: ${holderName}
+消毒记录: ${product.disinfectionRecords.length}次
+转手次数: ${product.transferRecords.length}次
+卫生评分: ${avgHygieneScore.toFixed(1)}★
+描述一致: ${avgDescriptionScore.toFixed(1)}★
+价格: ¥${product.price}
+---
+扫码后可看到:
+${qrContent}`;
   }, [product, avgHygieneScore, avgDescriptionScore, qrContent]);
 
   const generateQR = useCallback(async () => {
@@ -67,6 +80,7 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ visible, product, onClose }) 
     setIsGenerating(true);
     setQrError(false);
     setErrorMsg('');
+    setIsPngFormat(false);
 
     try {
       console.log('[QrCodeModal] Start generating QR, content length:', qrContent.length);
@@ -74,20 +88,49 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ visible, product, onClose }) 
       let dataUrl = '';
       let method = '';
 
-      try {
-        method = 'SVG';
-        console.log('[QrCodeModal] Trying SVG method first...');
-        dataUrl = generateQRCodeSVGDataURL(qrContent, 300);
-        console.log('[QrCodeModal] SVG method success, dataUrl length:', dataUrl.length);
-      } catch (e1) {
-        console.warn('[QrCodeModal] SVG method failed, trying Canvas:', e1);
+      const isWeapp = process.env.TARO_ENV === 'weapp';
+
+      if (isWeapp) {
+        console.log('[QrCodeModal] WeChat miniprogram: try Canvas first for PNG');
         try {
-          method = 'Canvas';
+          method = 'Canvas(小程序)';
           dataUrl = generateQRCodeDataURL(qrContent, 300);
-          console.log('[QrCodeModal] Canvas method success, dataUrl length:', dataUrl.length);
-        } catch (e2) {
-          console.error('[QrCodeModal] Canvas method also failed:', e2);
-          throw new Error('二维码生成失败：SVG和Canvas方法都不可用');
+          const isPng = dataUrl && dataUrl.startsWith('data:image/png');
+          if (isPng) {
+            setIsPngFormat(true);
+          }
+          console.log('[QrCodeModal] Canvas method success, isPng:', isPng);
+        } catch (e1) {
+          console.warn('[QrCodeModal] Canvas method failed, trying SVG:', e1);
+          try {
+            method = 'SVG(小程序)';
+            dataUrl = generateQRCodeSVGDataURL(qrContent, 300);
+            console.log('[QrCodeModal] SVG method success');
+          } catch (e2) {
+            console.error('[QrCodeModal] SVG method also failed:', e2);
+            throw new Error('二维码生成失败，请重试');
+          }
+        }
+      } else {
+        console.log('[QrCodeModal] H5 or other: try SVG first for stability');
+        try {
+          method = 'SVG';
+          dataUrl = generateQRCodeSVGDataURL(qrContent, 300);
+          console.log('[QrCodeModal] SVG method success');
+        } catch (e1) {
+          console.warn('[QrCodeModal] SVG method failed, trying Canvas:', e1);
+          try {
+            method = 'Canvas';
+            dataUrl = generateQRCodeDataURL(qrContent, 300);
+            const isPng = dataUrl && dataUrl.startsWith('data:image/png');
+            if (isPng) {
+              setIsPngFormat(true);
+            }
+            console.log('[QrCodeModal] Canvas method success, isPng:', isPng);
+          } catch (e2) {
+            console.error('[QrCodeModal] Canvas method also failed:', e2);
+            throw new Error('二维码生成失败，请重试');
+          }
         }
       }
 
@@ -96,7 +139,7 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ visible, product, onClose }) 
       }
 
       setQrDataUrl(dataUrl);
-      console.log(`[QrCodeModal] QR generated via ${method}, ready to display`);
+      console.log(`[QrCodeModal] QR generated via ${method}, dataUrl length: ${dataUrl.length}`);
 
       await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -120,6 +163,7 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ visible, product, onClose }) 
       setQrDataUrl('');
       setQrError(false);
       setErrorMsg('');
+      setIsPngFormat(false);
     }
   }, [visible, product, qrContent, generateQR]);
 
@@ -135,7 +179,7 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ visible, product, onClose }) 
       success: () => {
         Taro.showModal({
           title: '已复制履历摘要',
-          content: '消毒履历摘要已复制到剪贴板，包含商品名称、持有人、消毒次数、转手次数、评分等关键信息，可粘贴发送给好友。',
+          content: '消毒履历摘要已复制到剪贴板，包含商品名称、当前持有人、消毒次数、转手次数、评分等完整信息，可直接粘贴发送给好友。',
           showCancel: false,
           confirmText: '好的'
         });
@@ -162,7 +206,7 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ visible, product, onClose }) 
         });
         Taro.showModal({
           title: '分享给好友',
-          content: '请点击右上角「...」按钮，选择「发送给朋友」或「分享到朋友圈」，即可将商品消毒履历分享给好友。也可复制履历摘要直接发送。',
+          content: '请点击右上角「...」按钮，选择「发送给朋友」或「分享到朋友圈」。好友扫码后可直接看到商品消毒履历摘要。\n\n也可复制履历摘要直接发送。',
           showCancel: true,
           confirmText: '复制摘要',
           cancelText: '知道了',
@@ -196,7 +240,7 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ visible, product, onClose }) 
   };
 
   const handleSave = async () => {
-    console.log('[QrCodeModal] Save QR code to album');
+    console.log('[QrCodeModal] Save QR code to album, isPng:', isPngFormat);
 
     if (!qrDataUrl) {
       Taro.showActionSheet({
@@ -216,16 +260,43 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ visible, product, onClose }) 
       try {
         Taro.showLoading({ title: '保存中...', mask: true });
 
-        if (qrDataUrl.startsWith('data:image/svg+xml')) {
+        if (!isPngFormat) {
+          console.log('[QrCodeModal] Not PNG format, try regenerate with Canvas');
           Taro.hideLoading();
           Taro.showModal({
-            title: '提示',
-            content: '小程序端当前使用SVG格式二维码。请长按二维码图片手动保存，或点击「复制履历摘要」直接分享关键信息。',
+            title: '正在优化保存格式',
+            content: '当前二维码为SVG格式，小程序保存到相册需要PNG格式。是否重新生成PNG格式二维码？',
             showCancel: true,
-            confirmText: '复制摘要',
-            cancelText: '知道了',
-            success: (res) => {
+            confirmText: '重新生成',
+            cancelText: '复制摘要',
+            success: async (res) => {
               if (res.confirm) {
+                try {
+                  Taro.showLoading({ title: '重新生成中...', mask: true });
+                  const pngUrl = generateQRCodeDataURL(qrContent, 300);
+                  if (pngUrl && pngUrl.startsWith('data:image/png')) {
+                    setQrDataUrl(pngUrl);
+                    setIsPngFormat(true);
+                    Taro.hideLoading();
+                    await new Promise(r => setTimeout(r, 300));
+                    handleSave();
+                  } else {
+                    throw new Error('PNG生成失败');
+                  }
+                } catch (e) {
+                  Taro.hideLoading();
+                  Taro.showModal({
+                    title: '保存提示',
+                    content: 'PNG格式生成失败，您可以：\n1. 长按二维码图片手动保存\n2. 复制履历摘要直接分享',
+                    showCancel: true,
+                    confirmText: '复制摘要',
+                    cancelText: '知道了',
+                    success: (res2) => {
+                      if (res2.confirm) handleCopySummary();
+                    }
+                  });
+                }
+              } else {
                 handleCopySummary();
               }
             }
@@ -235,13 +306,16 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ visible, product, onClose }) 
 
         const fs = Taro.getFileSystemManager();
         const filePath = `${Taro.env.USER_DATA_PATH}/qr_resume_${Date.now()}.png`;
-        const base64Data = qrDataUrl.replace(/^data:image\/\w+;base64,/, '');
+        const base64Data = qrDataUrl.replace(/^data:image\/png;base64,/, '');
+
+        console.log('[QrCodeModal] Writing PNG to:', filePath, 'base64 length:', base64Data.length);
 
         fs.writeFile({
           filePath,
           data: base64Data,
           encoding: 'base64',
           success: () => {
+            console.log('[QrCodeModal] File written, now saving to album');
             Taro.saveImageToPhotosAlbum({
               filePath,
               success: () => {
@@ -254,7 +328,7 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ visible, product, onClose }) 
                 if (err.errMsg && (err.errMsg.includes('auth deny') || err.errMsg.includes('authorize'))) {
                   Taro.showModal({
                     title: '需要相册权限',
-                    content: '保存图片到相册需要开启相册权限。可以去设置中开启，或复制履历摘要直接分享。',
+                    content: '保存图片到相册需要开启相册权限。\n\n您可以：\n1. 点击「去设置」开启权限后重试\n2. 选择「复制摘要」直接分享文本',
                     showCancel: true,
                     confirmText: '去设置',
                     cancelText: '复制摘要',
@@ -306,7 +380,7 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ visible, product, onClose }) 
         if (qrDataUrl.startsWith('data:image/svg+xml')) {
           Taro.showModal({
             title: '保存二维码',
-            content: 'SVG格式二维码请右键点击图片，选择「图片另存为...」保存。也可复制履历摘要直接分享。',
+            content: '当前为SVG格式二维码。\n\n您可以：\n1. 右键点击二维码图片 → 「图片另存为...」\n2. 选择「复制摘要」直接分享文本',
             showCancel: true,
             confirmText: '复制摘要',
             cancelText: '知道了',
@@ -388,7 +462,7 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ visible, product, onClose }) 
                 二维码生成中...
               </Text>
               <Text style={{ fontSize: 20, color: '#bbb', marginTop: 8 }}>
-                正在编码 {qrContent.length} 字节数据
+                正在编码 {qrContent.length} 字符
               </Text>
             </View>
           )}
@@ -407,9 +481,16 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ visible, product, onClose }) 
                 }}
                 showMenuByLongpress
               />
-              <Text style={{ fontSize: 20, color: '#999', textAlign: 'center', marginTop: 8, display: 'block' }}>
-                长按二维码可保存图片
-              </Text>
+              <View style={{ textAlign: 'center', marginTop: 12 }}>
+                <Text style={{ fontSize: 20, color: '#999' }}>
+                  长按二维码可保存图片
+                </Text>
+                {isPngFormat && (
+                  <Text style={{ fontSize: 18, color: '#52c4a5', marginLeft: 8 }}>
+                    ✓ PNG格式可保存
+                  </Text>
+                )}
+              </View>
             </View>
           )}
 
@@ -445,13 +526,13 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ visible, product, onClose }) 
 
         <View className={styles.qrSummary}>
           <Text className={styles.qrSummaryText}>
-            💡 扫码内容摘要：{decodedSummary}
+            💡 扫码后可看到：{decodedSummary}
           </Text>
         </View>
 
         <View className={styles.tip}>
           <Text className={styles.tipText}>
-            🔒 该二维码已包含商品关键信息，交易完成后履历可一键过户给下一任买家
+            🔒 该二维码已包含完整履历摘要，交易完成后履历可一键过户给下一任买家
           </Text>
         </View>
 
