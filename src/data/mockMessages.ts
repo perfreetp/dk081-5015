@@ -162,7 +162,7 @@ export const mockMessages: Message[] = [
     content: '好的，那我们周末见哦！',
     type: 'text',
     timestamp: '2026-06-15T14:30:00.000Z',
-    status: 'unread'
+    status: 'sent'
   },
   {
     id: 'msg-011',
@@ -173,7 +173,7 @@ export const mockMessages: Message[] = [
     content: '请问吸奶器还在吗？',
     type: 'text',
     timestamp: '2026-06-15T10:20:00.000Z',
-    status: 'unread'
+    status: 'sent'
   },
   {
     id: 'msg-021',

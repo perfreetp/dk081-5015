@@ -21,9 +21,8 @@ const InspectPage: React.FC = () => {
     currentUser,
     products,
     conversations,
-    addTransferRecord,
+    transferOwnership,
     addReview,
-    updateProduct,
     updateConversation
   } = useStore();
 
@@ -52,10 +51,10 @@ const InspectPage: React.FC = () => {
     return products.find(p => p.id === pendingConversation.productId) || products[0];
   }, [pendingConversation, products]);
 
-  const isBuyer = useMemo(() => {
-    if (!pendingConversation) return true;
-    return pendingConversation.buyerId === currentUser.id;
-  }, [pendingConversation, currentUser.id]);
+  // const isBuyer = useMemo(() => {
+  //   if (!pendingConversation) return true;
+  //   return pendingConversation.buyerId === currentUser.id;
+  // }, [pendingConversation, currentUser.id]);
 
   useEffect(() => {
     if (product?.qaList) {
@@ -185,13 +184,7 @@ const InspectPage: React.FC = () => {
     };
 
     setTimeout(() => {
-      addTransferRecord(product.id, transferRecord);
-
-      updateProduct(product.id, {
-        status: 'sold',
-        currentHolderId: pendingConversation.buyerId,
-        currentHolderName: pendingConversation.buyerName
-      });
+      transferOwnership(product.id, transferRecord);
 
       updateConversation(pendingConversation.id, {
         lastMessage: '✓ 交易完成，履历已过户',

@@ -189,3 +189,33 @@
   background: rgba(255, 255, 255, 0.1);
   border-radius: 50%;
 }
+
+.retryBtn {
+  @include button-reset;
+  margin-top: $spacing-md;
+  padding: $spacing-sm $spacing-lg;
+  background: $color-primary;
+  color: #fff;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  height: auto;
+  line-height: 1.5;
+
+  &:active {
+    opacity: 0.9;
+  }
+}
+
+.qrSummary {
+  background: rgba(255, 193, 7, 0.1);
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.qrSummaryText {
+  font-size: $font-size-xs;
+  color: $color-warning;
+  line-height: 1.6;
+  word-break: break-all;
+}

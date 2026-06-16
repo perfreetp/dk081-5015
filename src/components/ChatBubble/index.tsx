@@ -35,7 +35,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
           <View className={styles.avatar}>
             <Image
               className={styles.avatarImage}
-              src={message.senderAvatar}
+              src={message.senderAvatar || 'https://picsum.photos/id/64/100/100'}
               mode='aspectFill'
               onError={(e) => {
                 console.error('[ChatBubble] Avatar load error:', e.detail);
@@ -62,7 +62,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
         <View className={styles.avatar}>
           <Image
             className={styles.avatarImage}
-            src={message.senderAvatar}
+            src={message.senderAvatar || 'https://picsum.photos/id/64/100/100'}
             mode='aspectFill'
             onError={(e) => {
               console.error('[ChatBubble] Avatar load error:', e.detail);
@@ -83,7 +83,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
         <View className={styles.avatar}>
           <Image
             className={styles.avatarImage}
-            src={message.senderAvatar}
+            src={message.senderAvatar || 'https://picsum.photos/id/64/100/100'}
             mode='aspectFill'
             onError={(e) => {
               console.error('[ChatBubble] Avatar load error:', e.detail);

@@ -68,7 +68,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({ product, onShowQR }) => {
           <Text className={styles.sectionIcon}>🧼</Text>
           消毒记录
         </View>
-        {product.disinfectionRecords.map((record, index) => (
+        {product.disinfectionRecords.map((record) => (
           <View key={record.id} className={styles.recordItem}>
             <View className={styles.recordHeader}>
               <Text className={styles.recordDate}>
@@ -160,7 +160,7 @@ const ResumeCard: React.FC<ResumeCardProps> = ({ product, onShowQR }) => {
                 ¥{product.originalPrice} · 全新
               </Text>
             </View>
-            {product.transferRecords.map((record, index) => (
+            {product.transferRecords.map((record) => (
               <View key={record.id} className={styles.transferItem}>
                 <View className={styles.transferInfo}>
                   <Text className={styles.transferUser}>

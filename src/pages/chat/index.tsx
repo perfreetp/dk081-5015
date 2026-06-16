@@ -11,7 +11,7 @@ import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import styles from './index.module.scss';
 import useStore from '@/store';
-import { Conversation, Message, Product, QAItem } from '@/types';
+import { Conversation, Message, QAItem } from '@/types';
 import ChatBubble from '@/components/ChatBubble';
 
 const ChatPage: React.FC = () => {
@@ -19,7 +19,6 @@ const ChatPage: React.FC = () => {
     currentUser,
     products,
     conversations,
-    messages,
     updateConversation,
     addMessage,
     getMessagesByConversation
@@ -254,7 +253,6 @@ const ChatPage: React.FC = () => {
     <ScrollView className={styles.conversationList} scrollY enhanced showScrollbar={false}>
       {userConversations.length > 0 ? (
         userConversations.map(conversation => {
-          const isMine = conversation.otherUserId !== currentUser.id;
           return (
             <View
               key={conversation.id}

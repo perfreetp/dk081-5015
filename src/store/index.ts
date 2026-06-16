@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import Taro from '@tarojs/taro';
-import { Product, Conversation, Message, Review, TransferRecord, QAItem, User } from '@/types';
+import { Product, Conversation, Message, Review, TransferRecord, User } from '@/types';
 import { mockProducts } from '@/data/mockProducts';
 import { mockConversations, mockMessages } from '@/data/mockMessages';
 
@@ -25,6 +25,7 @@ interface AppState {
   getMessagesByConversation: (conversationId: string) => Message[];
 
   addTransferRecord: (productId: string, record: TransferRecord) => void;
+  transferOwnership: (productId: string, record: TransferRecord) => void;
   addReview: (productId: string, review: Review) => void;
 
   resetStore: () => void;
@@ -90,6 +91,21 @@ const useStore = create<AppState>()(
             return {
               ...p,
               transferRecords: [...p.transferRecords, record]
+            };
+          }
+          return p;
+        })
+      })),
+
+      transferOwnership: (productId, record) => set((state) => ({
+        products: state.products.map(p => {
+          if (p.id === productId) {
+            return {
+              ...p,
+              transferRecords: [...p.transferRecords, record],
+              currentHolderId: record.toUserId,
+              currentHolderName: record.toUser,
+              status: 'sold' as const
             };
           }
           return p;

@@ -1,9 +1,9 @@
 const PAD0 = 0xEC;
 const PAD1 = 0x11;
 
-const G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | 1;
-const G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | 1;
-const G20 = (1 << 16) | (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 6) | (1 << 5) | (1 << 4) | (1 << 3) | 1;
+// const G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | 1;
+// const G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | 1;
+// const G20 = (1 << 16) | (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 6) | (1 << 5) | (1 << 4) | (1 << 3) | 1;
 
 const GLUT: Record<number, number> = {};
 const FLUT: Record<number, number> = {};
@@ -53,7 +53,7 @@ function generateErrorCorrection(data: number[], eccLen: number): number[] {
   return res.slice(data.length);
 }
 
-const ECC_LEVELS = { L: 1, M: 0, Q: 3, H: 2 };
+// const ECC_LEVELS = { L: 1, M: 0, Q: 3, H: 2 };
 const ECC_BLOCKS: Record<string, number[][]> = {
   '1-L': [[1, 26, 19]],
   '1-M': [[1, 26, 16]],
@@ -210,8 +210,6 @@ function placeModules(modules: boolean[][], data: number[], size: number, maskPa
 }
 
 export function generateQRCode(text: string, eccLevel: string = 'M'): boolean[][] {
-  const level = ECC_LEVELS[eccLevel as keyof typeof ECC_LEVELS];
-
   let data: number[] = [];
   const utf8 = new TextEncoder().encode(text);
 
@@ -347,12 +345,57 @@ export function renderQRCodeToCanvas(
 }
 
 export function generateQRCodeDataURL(text: string, size: number = 300): string {
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return '';
+  try {
+    if (typeof document !== 'undefined') {
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return '';
 
-  renderQRCodeToCanvas(ctx, text, size);
-  return canvas.toDataURL('image/png');
+      renderQRCodeToCanvas(ctx, text, size);
+      return canvas.toDataURL('image/png');
+    }
+  } catch (e) {
+    console.warn('[qrcode] Canvas not available, fallback to SVG');
+  }
+
+  return generateQRCodeSVGDataURL(text, size);
+}
+
+export function generateQRCodeSVGDataURL(text: string, size: number = 300): string {
+  const modules = generateQRCode(text, 'M');
+  const moduleSize = size / modules.length;
+  let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">`;
+  svgContent += `<rect width="${size}" height="${size}" fill="#ffffff"/>`;
+  
+  for (let row = 0; row < modules.length; row++) {
+    for (let col = 0; col < modules[row].length; col++) {
+      if (modules[row][col]) {
+        const x = col * moduleSize;
+        const y = row * moduleSize;
+        svgContent += `<rect x="${x}" y="${y}" width="${moduleSize}" height="${moduleSize}" fill="#1D2129"/>`;
+      }
+    }
+  }
+  
+  svgContent += '</svg>';
+  
+  const svgBase64 = typeof btoa !== 'undefined' 
+    ? btoa(unescape(encodeURIComponent(svgContent)))
+    : Buffer.from(svgContent).toString('base64');
+    
+  return `data:image/svg+xml;base64,${svgBase64}`;
+}
+
+export function generateQRCodeSimpleText(text: string): string {
+  const modules = generateQRCode(text, 'L');
+  let result = '';
+  for (let row = 0; row < modules.length; row++) {
+    for (let col = 0; col < modules[row].length; col++) {
+      result += modules[row][col] ? '█' : ' ';
+    }
+    result += '\n';
+  }
+  return result;
 }

@@ -4,8 +4,7 @@ import {
   Text,
   ScrollView,
   Input,
-  Button,
-  PullDownRefresh
+  Button
 } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
@@ -126,16 +125,15 @@ const ResumePage: React.FC = () => {
         </View>
       </View>
 
-      <PullDownRefresh
-        refreshing={refreshing}
-        onRefresh={handleRefresh}
-        threshold={50}
-      >
         <ScrollView
           className={styles.content}
           scrollY
           enhanced
           showScrollbar={false}
+          refresherEnabled
+          refresherTriggered={refreshing}
+          onRefresherRefresh={handleRefresh}
+          refresherThreshold={50}
         >
           <View className={styles.tabBar}>
             {tabs.map(tab => (
@@ -189,7 +187,6 @@ const ResumePage: React.FC = () => {
             </View>
           )}
         </ScrollView>
-      </PullDownRefresh>
 
       <QrCodeModal
         visible={showQRModal}

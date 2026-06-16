@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Textarea } from '@tarojs/components';
+import { View, Text } from '@tarojs/components';
 import classnames from 'classnames';
 import styles from './index.module.scss';
 import { QAItem } from '@/types';
