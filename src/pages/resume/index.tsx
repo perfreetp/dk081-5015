@@ -10,7 +10,7 @@ import {
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import styles from './index.module.scss';
-import { mockProducts } from '@/data/mockProducts';
+import useStore from '@/store';
 import { Product } from '@/types';
 import ResumeCard from '@/components/ResumeCard';
 import ProductCard from '@/components/ProductCard';
@@ -19,14 +19,22 @@ import QrCodeModal from '@/components/QrCodeModal';
 type TabType = 'all' | 'selling' | 'sold';
 
 const ResumePage: React.FC = () => {
+  const { currentUser, products } = useStore();
+
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [searchText, setSearchText] = useState('');
   const [showQRModal, setShowQRModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
+  const myProducts = useMemo(() => {
+    return products.filter(p =>
+      p.sellerId === currentUser.id || p.currentHolderId === currentUser.id
+    );
+  }, [products, currentUser.id]);
+
   const filteredProducts = useMemo(() => {
-    let result = [...mockProducts];
+    let result = [...myProducts];
 
     if (activeTab === 'selling') {
       result = result.filter(p => p.status === 'published');
@@ -38,33 +46,38 @@ const ResumePage: React.FC = () => {
       const keyword = searchText.toLowerCase();
       result = result.filter(p =>
         p.title.toLowerCase().includes(keyword) ||
-        p.categoryName.toLowerCase().includes(keyword)
+          p.categoryName.toLowerCase().includes(keyword)
       );
     }
 
-    return result;
-  }, [activeTab, searchText]);
+    return result.sort((a, b) =>
+      new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime()
+    );
+  }, [myProducts, activeTab, searchText]);
 
   const stats = useMemo(() => {
-    const total = mockProducts.length;
-    const selling = mockProducts.filter(p => p.status === 'published').length;
-    const sold = mockProducts.filter(p => p.status === 'sold').length;
-    const hygieneScore = mockProducts.length > 0
-      ? (mockProducts.reduce((sum, p) => {
-        if (p.reviews.length === 0) return sum + 5;
-        return sum + p.reviews.reduce((s, r) => s + r.hygieneScore, 0) / p.reviews.length;
-      }, 0) / mockProducts.length).toFixed(1)
+    const total = myProducts.length;
+    const selling = myProducts.filter(p => p.status === 'published').length;
+    const sold = myProducts.filter(p => p.status === 'sold').length;
+
+    const productsWithReviews = myProducts.filter(p => p.reviews.length > 0);
+    const avgHygiene = productsWithReviews.length > 0
+      ? (productsWithReviews.reduce((sum, p) => {
+        const avg = p.reviews.reduce((s, r) => s + r.hygieneScore, 0) / p.reviews.length;
+        return sum + avg;
+      }, 0) / productsWithReviews.length).toFixed(1)
       : '5.0';
 
-    return { total, selling, sold, hygieneScore };
-  }, []);
+    return { total, selling, sold, avgHygiene };
+  }, [myProducts]);
 
   const handleRefresh = () => {
     setRefreshing(true);
     console.log('[ResumePage] Pull to refresh');
     setTimeout(() => {
       setRefreshing(false);
-    }, 1500);
+      Taro.showToast({ title: '刷新成功', icon: 'success' });
+    }, 1000);
   };
 
   const handleShowQR = (product: Product) => {
@@ -79,10 +92,7 @@ const ResumePage: React.FC = () => {
 
   const handleProductClick = (product: Product) => {
     console.log('[ResumePage] Product clicked:', product.id);
-    Taro.showToast({
-      title: '查看商品详情',
-      icon: 'none'
-    });
+    handleShowQR(product);
   };
 
   const tabs: { key: TabType; name: string }[] = [
@@ -110,7 +120,7 @@ const ResumePage: React.FC = () => {
             <Text className={styles.statLabel}>已成交</Text>
           </View>
           <View className={styles.statItem}>
-            <Text className={styles.statValue}>{stats.hygieneScore}</Text>
+            <Text className={styles.statValue}>{stats.avgHygiene}</Text>
             <Text className={styles.statLabel}>卫生评分</Text>
           </View>
         </View>

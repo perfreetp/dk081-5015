@@ -10,40 +10,64 @@ import {
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import styles from './index.module.scss';
-import { mockConversations, mockMessages } from '@/data/mockMessages';
-import { mockProducts } from '@/data/mockProducts';
-import { Conversation, Message, Product } from '@/types';
+import useStore from '@/store';
+import { Conversation, Message, Product, QAItem } from '@/types';
 import ChatBubble from '@/components/ChatBubble';
 
 const ChatPage: React.FC = () => {
+  const {
+    currentUser,
+    products,
+    conversations,
+    messages,
+    updateConversation,
+    addMessage,
+    getMessagesByConversation
+  } = useStore();
+
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [qaConfirmed, setQaConfirmed] = useState(false);
   const [showPriceNegotiation, setShowPriceNegotiation] = useState(false);
+  const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<any>(null);
+
+  const userConversations = useMemo(() => {
+    return conversations.filter(c =>
+      c.buyerId === currentUser.id || c.sellerId === currentUser.id
+    ).sort((a, b) =>
+      new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()
+    );
+  }, [conversations, currentUser.id]);
 
   const currentProduct = useMemo(() => {
     if (!selectedConversation) return null;
-    return mockProducts.find(p => p.id === selectedConversation.productId);
-  }, [selectedConversation]);
+    return products.find(p => p.id === selectedConversation.productId);
+  }, [selectedConversation, products]);
+
+  const isBuyer = useMemo(() => {
+    if (!selectedConversation) return false;
+    return selectedConversation.buyerId === currentUser.id;
+  }, [selectedConversation, currentUser.id]);
 
   useEffect(() => {
     if (selectedConversation) {
-      const convoMessages = mockMessages.filter(m => m.conversationId === selectedConversation.id);
-      setMessages(convoMessages);
-      setQaConfirmed(selectedConversation.qaConfirmed || false);
-      setShowPriceNegotiation(selectedConversation.priceProposed || false);
+      const msgs = getMessagesByConversation(selectedConversation.id);
+      setChatMessages(msgs.sort((a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      ));
+      setQaConfirmed(selectedConversation.qaConfirmed);
+      setShowPriceNegotiation(selectedConversation.priceProposed && isBuyer === false);
     }
-  }, [selectedConversation]);
+  }, [selectedConversation, getMessagesByConversation, isBuyer]);
 
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (messagesEndRef.current && chatMessages.length > 0) {
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView?.({ behavior: 'smooth' });
-      }, 100);
+      }, 200);
     }
-  }, [messages]);
+  }, [chatMessages.length, qaConfirmed, showPriceNegotiation]);
 
   const handleConversationClick = (conversation: Conversation) => {
     console.log('[ChatPage] Open conversation:', conversation.id);
@@ -53,81 +77,159 @@ const ChatPage: React.FC = () => {
   const handleBack = () => {
     console.log('[ChatPage] Back to conversation list');
     setSelectedConversation(null);
-    setMessages([]);
+    setChatMessages([]);
+    setInputText('');
   };
 
   const handleSend = () => {
-    if (!inputText.trim() || !selectedConversation) return;
+    if (!inputText.trim() || !selectedConversation || !qaConfirmed) return;
 
     console.log('[ChatPage] Send message:', inputText);
 
     const newMessage: Message = {
       id: `msg_${Date.now()}`,
       conversationId: selectedConversation.id,
-      senderId: 'user_001',
+      senderId: currentUser.id,
+      senderName: currentUser.name,
       type: 'text',
       content: inputText,
       timestamp: new Date().toISOString(),
       status: 'sent'
     };
 
-    setMessages(prev => [...prev, newMessage]);
+    addMessage(newMessage);
+    setChatMessages(prev => [...prev, newMessage]);
+
+    updateConversation(selectedConversation.id, {
+      lastMessage: inputText,
+      lastMessageTime: new Date().toISOString()
+    });
+
     setInputText('');
+
+    if (chatMessages.length <= 3 && qaConfirmed) {
+      setTimeout(() => {
+        const reply: Message = {
+          id: `msg_${Date.now() + 1}`,
+          conversationId: selectedConversation.id,
+          senderId: isBuyer ? selectedConversation.sellerId : selectedConversation.buyerId,
+          senderName: isBuyer ? selectedConversation.sellerName : selectedConversation.buyerName,
+          type: 'text',
+          content: isBuyer
+            ? '好的，商品已经按照标准流程消毒完成，您可以放心购买~'
+            : '好的，请问什么时候方便当面验货呢？',
+          timestamp: new Date().toISOString(),
+          status: 'sent'
+        };
+        addMessage(reply);
+        setChatMessages(prev => [...prev, reply]);
+        updateConversation(selectedConversation.id, {
+          lastMessage: reply.content,
+          lastMessageTime: reply.timestamp
+        });
+      }, 1500);
+    }
   };
 
   const handleConfirmQA = () => {
+    if (!selectedConversation) return;
+
     console.log('[ChatPage] QA confirmed');
     setQaConfirmed(true);
+
+    updateConversation(selectedConversation.id, {
+      qaConfirmed: true
+    });
+
+    const systemMsg: Message = {
+      id: `msg_${Date.now()}`,
+      conversationId: selectedConversation.id,
+      senderId: 'system',
+      type: 'system',
+      content: '✓ 卫生细节已确认，现在可以开始议价和聊天啦~',
+      timestamp: new Date().toISOString(),
+      status: 'sent'
+    };
+    addMessage(systemMsg);
+    setChatMessages(prev => [...prev, systemMsg]);
+
     Taro.showToast({
       title: '已确认卫生细节',
       icon: 'success'
     });
-
-    const systemMsg: Message = {
-      id: `msg_${Date.now()}`,
-      conversationId: selectedConversation!.id,
-      senderId: 'system',
-      type: 'system',
-      content: '买家已确认卫生细节，现在可以开始议价啦~',
-      timestamp: new Date().toISOString(),
-      status: 'sent'
-    };
-    setMessages(prev => [...prev, systemMsg]);
   };
 
   const handleQuickTool = (type: string) => {
     console.log('[ChatPage] Quick tool:', type);
-    Taro.showToast({
-      title: `打开${type}`,
-      icon: 'none'
-    });
+
+    if (type === '预约验货' && selectedConversation && qaConfirmed) {
+      Taro.showModal({
+        title: '预约验货',
+        content: '是否跳转到验货页面安排当面交易？',
+        success: (res) => {
+          if (res.confirm) {
+            Taro.switchTab({ url: '/pages/inspect/index' });
+          }
+        }
+      });
+    } else {
+      Taro.showToast({
+        title: `打开${type}`,
+        icon: 'none'
+      });
+    }
   };
 
   const handleAcceptPrice = () => {
+    if (!selectedConversation) return;
+
     console.log('[ChatPage] Accept price');
     setShowPriceNegotiation(false);
-    Taro.showToast({
-      title: '价格已确认，可安排验货',
-      icon: 'success'
-    });
 
     const systemMsg: Message = {
       id: `msg_${Date.now()}`,
-      conversationId: selectedConversation!.id,
+      conversationId: selectedConversation.id,
       senderId: 'system',
       type: 'system',
-      content: '价格已确认！请前往「验货」页完成当面交易~',
+      content: '✓ 价格已确认！请前往「验货」页完成当面交易~',
       timestamp: new Date().toISOString(),
       status: 'sent'
     };
-    setMessages(prev => [...prev, systemMsg]);
+    addMessage(systemMsg);
+    setChatMessages(prev => [...prev, systemMsg]);
+
+    updateConversation(selectedConversation.id, {
+      priceProposed: false,
+      inspectScheduled: true
+    });
+
+    Taro.showToast({
+      title: '价格已确认',
+      icon: 'success'
+    });
   };
 
   const handleDeclinePrice = () => {
+    if (!selectedConversation) return;
+
     console.log('[ChatPage] Decline price');
     setShowPriceNegotiation(false);
+
+    const reply: Message = {
+      id: `msg_${Date.now()}`,
+      conversationId: selectedConversation.id,
+      senderId: currentUser.id,
+      senderName: currentUser.name,
+      type: 'text',
+      content: '价格我再考虑一下~',
+      timestamp: new Date().toISOString(),
+      status: 'sent'
+    };
+    addMessage(reply);
+    setChatMessages(prev => [...prev, reply]);
+
     Taro.showToast({
-      title: '请继续协商价格',
+      title: '请继续协商',
       icon: 'none'
     });
   };
@@ -150,9 +252,9 @@ const ChatPage: React.FC = () => {
 
   const renderConversationList = () => (
     <ScrollView className={styles.conversationList} scrollY enhanced showScrollbar={false}>
-      {mockConversations.length > 0 ? (
-        mockConversations.map(conversation => {
-          const product = mockProducts.find(p => p.id === conversation.productId);
+      {userConversations.length > 0 ? (
+        userConversations.map(conversation => {
+          const isMine = conversation.otherUserId !== currentUser.id;
           return (
             <View
               key={conversation.id}
@@ -160,9 +262,7 @@ const ChatPage: React.FC = () => {
               onClick={() => handleConversationClick(conversation)}
             >
               <View className={styles.avatar}>
-                <Text>
-                  {conversation.otherUserName.charAt(0)}
-                </Text>
+                <Text>{conversation.otherUserName.charAt(0)}</Text>
               </View>
               <View className={styles.conversationContent}>
                 <View className={styles.conversationHeader}>
@@ -183,6 +283,21 @@ const ChatPage: React.FC = () => {
                     </View>
                   )}
                 </View>
+                {!conversation.qaConfirmed && (
+                  <View style={{ marginTop: 8 }}>
+                    <Text
+                      style={{
+                        fontSize: 22,
+                        color: '#FF6B9A',
+                        background: 'rgba(255,107,154,0.1)',
+                        padding: '4rpx 16rpx',
+                        borderRadius: 20
+                      }}
+                    >
+                      🔒 待确认卫生细节
+                    </Text>
+                  </View>
+                )}
               </View>
             </View>
           );
@@ -191,6 +306,9 @@ const ChatPage: React.FC = () => {
         <View className={styles.emptyList}>
           <Text className={styles.emptyIcon}>💬</Text>
           <Text className={styles.emptyText}>暂无消息</Text>
+          <Text style={{ fontSize: 24, color: '#999', marginTop: 16 }}>
+            去「履历」页选择商品开始聊天吧~
+          </Text>
         </View>
       )}
     </ScrollView>
@@ -251,12 +369,18 @@ const ChatPage: React.FC = () => {
                 <Text className={styles.qaIcon}>📋</Text>
                 {qaConfirmed ? '✓ 卫生细节已确认' : '卫生细节预确认'}
               </Text>
-              {currentProduct.qaList?.slice(0, 3).map((qa, index) => (
+
+              <Text style={{ fontSize: 24, color: '#666', marginBottom: 16 }}>
+                为了保障交易安全，请先确认以下卫生信息。确认后将解锁聊天和议价功能。
+              </Text>
+
+              {currentProduct.qaList?.map((qa: QAItem, index: number) => (
                 <View key={index} className={styles.qaItem}>
-                  <Text className={styles.qaQuestion}>Q: {qa.question}</Text>
+                  <Text className={styles.qaQuestion}>Q{index + 1}: {qa.question}</Text>
                   <Text className={styles.qaAnswer}>A: {qa.answer}</Text>
                 </View>
               ))}
+
               {!qaConfirmed && (
                 <>
                   <View className={styles.qaNote}>
@@ -267,19 +391,24 @@ const ChatPage: React.FC = () => {
                   </View>
                   <Button
                     className={classnames(styles.sendBtn)}
-                    style={{ width: '100%', marginTop: '24rpx' }}
+                    style={{ width: '100%', marginTop: 24 }}
                     onClick={handleConfirmQA}
                   >
-                    我已确认，开始议价
+                    我已确认，开始聊天
                   </Button>
                 </>
               )}
             </View>
           )}
 
-          {showPriceNegotiation && qaConfirmed && (
+          {qaConfirmed && showPriceNegotiation && currentProduct && (
             <View className={styles.priceSection}>
-              <Text className={styles.priceTitle}>💰 买家议价：¥{currentProduct?.price} → ¥{Math.round((currentProduct?.price || 0) * 0.85)}</Text>
+              <Text className={styles.priceTitle}>
+                💰 {isBuyer ? '卖家' : '买家'}议价：¥{currentProduct.price} → ¥{Math.round(currentProduct.price * 0.85)}
+              </Text>
+              <Text style={{ fontSize: 24, color: '#666', textAlign: 'center', marginBottom: 16 }}>
+                {isBuyer ? '卖家接受这个价格吗？' : '您接受这个价格吗？'}
+              </Text>
               <View className={styles.priceActions}>
                 <Button
                   className={classnames(styles.priceBtn, styles.priceDecline)}
@@ -297,43 +426,53 @@ const ChatPage: React.FC = () => {
             </View>
           )}
 
-          {messages.map(message => (
-            <ChatBubble key={message.id} message={message} />
+          {chatMessages.map(message => (
+            <ChatBubble
+              key={message.id}
+              message={message}
+              isSelf={message.senderId === currentUser.id}
+              showAvatar
+              showName={message.type !== 'system' && message.senderId !== currentUser.id}
+            />
           ))}
+
           <View ref={messagesEndRef} />
         </View>
       </ScrollView>
 
       <View className={styles.inputArea}>
         <View style={{ flex: 1 }}>
-          <View className={styles.inputToolbar}>
-            <Button
-              className={classnames(styles.toolBtn)}
-              onClick={() => handleQuickTool('图片')}
-            >
-              📷 图片
-            </Button>
-            <Button
-              className={classnames(styles.toolBtn)}
-              onClick={() => handleQuickTool('位置')}
-            >
-              📍 位置
-            </Button>
-            <Button
-              className={classnames(styles.toolBtn)}
-              onClick={() => handleQuickTool('验货')}
-            >
-              ✅ 预约验货
-            </Button>
-          </View>
+          {qaConfirmed && (
+            <View className={styles.inputToolbar}>
+              <Button
+                className={styles.toolBtn}
+                onClick={() => handleQuickTool('图片')}
+              >
+                📷 图片
+              </Button>
+              <Button
+                className={styles.toolBtn}
+                onClick={() => handleQuickTool('位置')}
+              >
+                📍 位置
+              </Button>
+              <Button
+                className={styles.toolBtn}
+                onClick={() => handleQuickTool('预约验货')}
+              >
+                ✅ 预约验货
+              </Button>
+            </View>
+          )}
           <View className={styles.inputWrapper}>
             <Input
               className={styles.input}
-              placeholder={qaConfirmed ? '输入消息...' : '先确认卫生细节再聊天哦~'}
+              placeholder={qaConfirmed ? '输入消息...' : '请先确认卫生细节再聊天哦~'}
               value={inputText}
               onInput={(e) => setInputText(e.detail.value)}
               onConfirm={handleSend}
               disabled={!qaConfirmed}
+              confirmType='send'
             />
           </View>
         </View>

@@ -115,6 +115,31 @@ const ResumeCard: React.FC<ResumeCardProps> = ({ product, onShowQR }) => {
         ))}
       </View>
 
+      <View className={styles.section}>
+        <View className={styles.sectionTitle}>
+          <Text className={styles.sectionIcon}>👤</Text>
+          当前持有人
+        </View>
+        <View className={styles.holderInfo}>
+          <View className={styles.holderAvatar}>
+            <Text style={{ fontSize: 32 }}>👶</Text>
+          </View>
+          <View className={styles.holderDetail}>
+            <Text className={styles.holderName}>
+              {product.currentHolderName || product.sellerName}
+            </Text>
+            <Text className={styles.holderLabel}>
+              {product.status === 'sold' ? '已购买 · 现任持有者' : '发布者 · 在售中'}
+            </Text>
+          </View>
+          {product.status === 'sold' && (
+            <View className={styles.holderBadge}>
+              ✓ 已过户
+            </View>
+          )}
+        </View>
+      </View>
+
       {product.transferRecords.length > 0 && (
         <View className={styles.section}>
           <View className={styles.sectionTitle}>
@@ -122,6 +147,19 @@ const ResumeCard: React.FC<ResumeCardProps> = ({ product, onShowQR }) => {
             转手记录（第{product.transferRecords.length + 1}手）
           </View>
           <View className={styles.transferHistory}>
+            <View className={styles.transferItem}>
+              <View className={styles.transferInfo}>
+                <Text className={styles.transferUser}>
+                  初次发布 → {product.sellerName}
+                </Text>
+                <Text className={styles.transferDate}>
+                  {product.publishDate}
+                </Text>
+              </View>
+              <Text className={styles.transferPrice}>
+                ¥{product.originalPrice} · 全新
+              </Text>
+            </View>
             {product.transferRecords.map((record, index) => (
               <View key={record.id} className={styles.transferItem}>
                 <View className={styles.transferInfo}>
@@ -130,10 +168,39 @@ const ResumeCard: React.FC<ResumeCardProps> = ({ product, onShowQR }) => {
                   </Text>
                   <Text className={styles.transferDate}>
                     {record.date}
+                    {record.checkInLocation && ` · ${record.checkInLocation}`}
                   </Text>
                 </View>
                 <Text className={styles.transferPrice}>
-                  ¥{record.price} · {record.location}
+                  ¥{record.price}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {product.reviews.length > 0 && (
+        <View className={styles.section}>
+          <View className={styles.sectionTitle}>
+            <Text className={styles.sectionIcon}>⭐</Text>
+            买家评价（{product.reviews.length}条）
+          </View>
+          <View className={styles.reviewList}>
+            {product.reviews.map(review => (
+              <View key={review.id} className={styles.reviewItem}>
+                <View className={styles.reviewHeader}>
+                  <Text className={styles.reviewerName}>{review.userName}</Text>
+                  <View className={styles.reviewStars}>
+                    <Text className={styles.starText}>描述 {review.descriptionScore}★</Text>
+                    <Text className={styles.starText}>卫生 {review.hygieneScore}★</Text>
+                  </View>
+                </View>
+                {review.comment && (
+                  <Text className={styles.reviewComment}>{review.comment}</Text>
+                )}
+                <Text className={styles.reviewDate}>
+                  {new Date(review.createdAt).toLocaleDateString('zh-CN')}
                 </Text>
               </View>
             ))}

@@ -19,6 +19,7 @@ export interface DisinfectionRecord {
   id: string;
   date: string;
   method: string;
+  methodText?: string;
   materials: string[];
   operator: string;
   beforePhotos: string[];
@@ -29,11 +30,14 @@ export interface DisinfectionRecord {
 
 export interface TransferRecord {
   id: string;
+  fromUserId: string;
   fromUser: string;
+  toUserId: string;
   toUser: string;
   date: string;
   price: number;
   location?: string;
+  checkInLocation?: string;
 }
 
 export interface Review {
@@ -43,7 +47,13 @@ export interface Review {
   descriptionScore: number;
   hygieneScore: number;
   comment: string;
-  date: string;
+  createdAt: string;
+}
+
+export interface QAItem {
+  question: string;
+  answer: string;
+  isHygiene: boolean;
 }
 
 export interface Product {
@@ -71,25 +81,27 @@ export interface Product {
   location: string;
   publishDate: string;
   status: 'published' | 'reserved' | 'sold';
-  qaList?: QAItem[];
-}
-
-export interface QAItem {
-  question: string;
-  answer: string;
-  isHygiene: boolean;
+  qaList: QAItem[];
+  currentHolderId?: string;
+  currentHolderName?: string;
 }
 
 export interface Message {
   id: string;
   conversationId: string;
   senderId: string;
-  senderName: string;
-  senderAvatar: string;
+  senderName?: string;
+  senderAvatar?: string;
   content: string;
-  type: 'text' | 'qa' | 'system';
+  type: 'text' | 'qa' | 'system' | 'price';
   timestamp: string;
+  status?: 'sending' | 'sent' | 'read';
   qaData?: QAItem;
+  priceData?: {
+    fromPrice: number;
+    toPrice: number;
+    direction: 'buyer_offer' | 'seller_counter';
+  };
 }
 
 export interface Conversation {
@@ -97,23 +109,35 @@ export interface Conversation {
   productId: string;
   productTitle: string;
   productImage: string;
+  productPrice: number;
+  buyerId: string;
+  buyerName: string;
+  sellerId: string;
+  sellerName: string;
   otherUserId: string;
   otherUserName: string;
   otherUserAvatar: string;
   lastMessage: string;
-  lastTime: string;
+  lastMessageTime: string;
   unreadCount: number;
-  hygieneCheckDone: boolean;
+  qaConfirmed: boolean;
+  priceProposed: boolean;
+  inspectScheduled: boolean;
+  inspectTime?: string;
+  inspectLocation?: string;
 }
 
 export interface User {
   id: string;
   name: string;
   avatar: string;
-  phone: string;
-  location: string;
-  creditScore: number;
-  hygieneScore: number;
-  publishCount: number;
-  buyCount: number;
+  intro?: string;
+  trustLevel?: 'normal' | 'good' | 'expert';
+  joinDate?: string;
+  phone?: string;
+  location?: string;
+  creditScore?: number;
+  hygieneScore?: number;
+  publishCount?: number;
+  buyCount?: number;
 }

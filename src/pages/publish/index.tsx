@@ -23,9 +23,12 @@ import {
 } from '@/data/cleanSteps';
 import { getTodayDate } from '@/utils/date';
 import CleanStepCard from '@/components/CleanStepCard';
-import { CleanStep, QAItem } from '@/types';
+import { CleanStep, QAItem, Product, DisinfectionRecord } from '@/types';
+import useStore from '@/store';
 
 const PublishPage: React.FC = () => {
+  const { currentUser, addProduct } = useStore();
+
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [showHighRiskModal, setShowHighRiskModal] = useState(false);
   const [pendingCategory, setPendingCategory] = useState<string>('');
@@ -135,6 +138,14 @@ const PublishPage: React.FC = () => {
       Taro.showToast({ title: '请选择商品品类', icon: 'none' });
       return;
     }
+    if (beforePhotos.length === 0) {
+      Taro.showToast({ title: '请上传清洗前照片', icon: 'none' });
+      return;
+    }
+    if (afterPhotos.length === 0) {
+      Taro.showToast({ title: '请上传清洗后照片', icon: 'none' });
+      return;
+    }
     if (incompleteRequired.length > 0) {
       Taro.showToast({ title: '请完成所有必选清洁步骤', icon: 'none' });
       return;
@@ -160,40 +171,77 @@ const PublishPage: React.FC = () => {
       return;
     }
 
+    const methodInfo = disinfectionMethods.find(m => m.id === selectedMethod);
+    const conditionInfo = conditions.find(c => c.id === selectedCondition);
+    const categoryInfo = getCategoryById(selectedCategory);
+
     const qaList: QAItem[] = hygieneQuestions.map((q, i) => ({
       question: q,
       answer: i === 0 ? (incompleteRequired.length === 0 ? '所有必选步骤已完成' : '部分步骤未完成')
         : i === 1 ? disinfectionDate
-        : i === 2 ? (beforePhotos.length > 0 || afterPhotos.length > 0 ? '已上传清洗前后照片' : '暂无照片')
-        : i === 3 ? selectedMaterials.map(m => disinfectionMaterials.find(d => d.id === m)?.name).filter(Boolean).join('、')
-        : i === 4 ? '无需要更换的配件'
-        : '已自查，无召回风险',
+          : i === 2 ? (beforePhotos.length > 0 || afterPhotos.length > 0 ? '已上传清洗前后照片' : '暂无照片')
+            : i === 3 ? selectedMaterials.map(m => disinfectionMaterials.find(d => d.id === m)?.name).filter(Boolean).join('、') || '无'
+              : i === 4 ? '无需要更换的配件'
+                : '已自查，无召回风险',
       isHygiene: true
     }));
 
-    console.log('[PublishPage] Submit product:', {
-      category,
-      completedSteps,
-      disinfectionDate,
-      selectedMethod,
-      selectedMaterials,
-      title,
-      price,
-      qaList
-    });
+    const disinfectionRecord: DisinfectionRecord = {
+      id: `dis_${Date.now()}`,
+      date: disinfectionDate,
+      method: selectedMethod,
+      methodText: methodInfo?.name,
+      materials: selectedMaterials,
+      operator,
+      beforePhotos,
+      afterPhotos,
+      completedSteps: Object.keys(completedSteps).filter(k => completedSteps[k])
+    };
 
-    Taro.showLoading({ title: '发布中...' });
+    const product: Product = {
+      id: `prod_${Date.now()}`,
+      title: title.trim(),
+      categoryId: selectedCategory,
+      categoryName: categoryInfo?.name || '',
+      description: description || '商品状态良好，已按标准流程清洁消毒，可放心使用。',
+      price: Number(price),
+      originalPrice: originalPrice ? Number(originalPrice) : Math.round(Number(price) * 2),
+      condition: selectedCondition as 'new' | 'likeNew' | 'good' | 'fair',
+      conditionText: conditionInfo?.name || '',
+      useMonths,
+      recallRisk: !recallChecked ? false : true,
+      isHighRisk: categoryInfo?.isHighRisk || false,
+      coverImage: afterPhotos[0] || '',
+      images: [...afterPhotos, ...beforePhotos],
+      disinfectionRecords: [disinfectionRecord],
+      transferRecords: [],
+      reviews: [],
+      sellerId: currentUser.id,
+      sellerName: currentUser.name,
+      sellerAvatar: currentUser.avatar || '',
+      location: '北京市朝阳区',
+      publishDate: new Date().toISOString().split('T')[0],
+      status: 'published' as const,
+      qaList,
+      currentHolderId: currentUser.id,
+      currentHolderName: currentUser.name
+    };
+
+    console.log('[PublishPage] Submit product:', product);
+
+    Taro.showLoading({ title: '发布中...', mask: true });
     setTimeout(() => {
+      addProduct(product);
       Taro.hideLoading();
       Taro.showToast({
         title: '发布成功',
         icon: 'success',
-        duration: 2000
+        duration: 1500
       });
       setTimeout(() => {
         Taro.switchTab({ url: '/pages/resume/index' });
-      }, 2000);
-    }, 1500);
+      }, 1500);
+    }, 1000);
   };
 
   const completedCount = Object.values(completedSteps).filter(Boolean).length;

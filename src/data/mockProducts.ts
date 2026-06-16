@@ -35,11 +35,14 @@ export const mockProducts: Product[] = [
     transferRecords: [
       {
         id: 'trans-001',
+        fromUserId: 'user-001',
         fromUser: '新手妈妈小李',
+        toUserId: 'user-002',
         toUser: '宝宝妈妈小王',
         date: '2025-06-15',
         price: 800,
-        location: '北京市朝阳区'
+        location: '北京市朝阳区',
+        checkInLocation: '瑞幸咖啡(望京SOHO店)'
       }
     ],
     reviews: [
@@ -50,15 +53,17 @@ export const mockProducts: Product[] = [
         descriptionScore: 5,
         hygieneScore: 5,
         comment: '卖家非常用心，清洁消毒做得很彻底，收到的车车很干净，宝宝坐上很放心！',
-        date: '2025-07-20'
+        createdAt: '2025-07-20T10:30:00.000Z'
       }
     ],
-    sellerId: 'user-002',
-    sellerName: '宝宝妈妈小王',
+    sellerId: 'user-001',
+    sellerName: '新手妈妈小李',
     sellerAvatar: 'https://picsum.photos/id/64/100/100',
+    currentHolderId: 'user-002',
+    currentHolderName: '宝宝妈妈小王',
     location: '北京市朝阳区',
-    publishDate: '2026-06-12',
-    status: 'published',
+    publishDate: '2025-05-20',
+    status: 'sold',
     qaList: [
       { question: '是否所有清洁步骤都已完成？', answer: '是的，已完成所有必要步骤并拍照记录', isHygiene: true },
       { question: '最近一次消毒是什么时候？', answer: '2026年6月10日，使用蒸汽消毒', isHygiene: true },
@@ -97,12 +102,17 @@ export const mockProducts: Product[] = [
     ],
     transferRecords: [],
     reviews: [],
-    sellerId: 'user-003',
-    sellerName: '乐乐妈',
+    sellerId: 'user_001',
+    sellerName: '新手妈妈小李',
     sellerAvatar: 'https://picsum.photos/id/91/100/100',
     location: '北京市海淀区',
     publishDate: '2026-06-11',
-    status: 'published'
+    status: 'published',
+    qaList: [
+      { question: '餐盘是否可拆卸清洗？', answer: '是的，餐盘可单独拆卸，已彻底清洗消毒', isHygiene: true },
+      { question: '最近一次消毒是什么时候？', answer: '2026年6月8日，煮沸消毒', isHygiene: true },
+      { question: '是否有配件缺失？', answer: '配件齐全，安全带、餐盘都在', isHygiene: false }
+    ]
   },
   {
     id: 'prod-003',
@@ -136,12 +146,17 @@ export const mockProducts: Product[] = [
     ],
     transferRecords: [],
     reviews: [],
-    sellerId: 'user-004',
-    sellerName: '琪琪妈',
+    sellerId: 'user_001',
+    sellerName: '新手妈妈小李',
     sellerAvatar: 'https://picsum.photos/id/177/100/100',
     location: '北京市西城区',
     publishDate: '2026-06-09',
-    status: 'published'
+    status: 'published',
+    qaList: [
+      { question: '是否为高敏物品？', answer: '是的，吸奶器属于高敏物品，建议自行购买全新配件', isHygiene: true },
+      { question: '主机功能是否完好？', answer: '主机功能完好，吸力正常', isHygiene: false },
+      { question: '最近一次消毒是什么时候？', answer: '2026年6月5日，表面擦拭消毒', isHygiene: true }
+    ]
   },
   {
     id: 'prod-004',
@@ -176,12 +191,17 @@ export const mockProducts: Product[] = [
     ],
     transferRecords: [],
     reviews: [],
-    sellerId: 'user-005',
-    sellerName: '小米妈',
+    sellerId: 'user_001',
+    sellerName: '新手妈妈小李',
     sellerAvatar: 'https://picsum.photos/id/338/100/100',
     location: '北京市丰台区',
     publishDate: '2026-06-13',
-    status: 'published'
+    status: 'published',
+    qaList: [
+      { question: '衣物是否有污渍或破损？', answer: '无明显污渍和破损，成色良好', isHygiene: true },
+      { question: '最近一次清洗是什么时候？', answer: '2026年6月12日，婴儿洗衣液清洗+阳光暴晒', isHygiene: true },
+      { question: '是什么品牌的？', answer: '全棉时代和英氏，都是大牌质量好', isHygiene: false }
+    ]
   },
   {
     id: 'prod-005',
@@ -215,12 +235,17 @@ export const mockProducts: Product[] = [
     ],
     transferRecords: [],
     reviews: [],
-    sellerId: 'user-006',
-    sellerName: '豆豆妈',
+    sellerId: 'user_001',
+    sellerName: '新手妈妈小李',
     sellerAvatar: 'https://picsum.photos/id/1027/100/100',
     location: '北京市通州区',
     publishDate: '2026-06-10',
-    status: 'published'
+    status: 'published',
+    qaList: [
+      { question: '玩具有没有破损或小零件脱落？', answer: '无破损，所有零件都完好', isHygiene: true },
+      { question: '最近一次消毒是什么时候？', answer: '2026年6月7日，消毒湿巾擦拭', isHygiene: true },
+      { question: '适合多大的宝宝？', answer: '0-1岁都可以玩，有不同阶段的玩具', isHygiene: false }
+    ]
   },
   {
     id: 'prod-006',
@@ -253,12 +278,17 @@ export const mockProducts: Product[] = [
     ],
     transferRecords: [],
     reviews: [],
-    sellerId: 'user-007',
-    sellerName: '果果妈',
+    sellerId: 'user_001',
+    sellerName: '新手妈妈小李',
     sellerAvatar: 'https://picsum.photos/id/64/100/100',
     location: '北京市朝阳区',
     publishDate: '2026-06-14',
-    status: 'published'
+    status: 'published',
+    qaList: [
+      { question: '是否为高敏物品？', answer: '是的，奶瓶/奶嘴属于高敏物品，建议自行购买全新奶嘴', isHygiene: true },
+      { question: '瓶身有没有破损？', answer: '瓶身完好，无裂痕无破损', isHygiene: true },
+      { question: '最近一次消毒是什么时候？', answer: '2026年6月11日，煮沸消毒10分钟', isHygiene: true }
+    ]
   }
 ];
 

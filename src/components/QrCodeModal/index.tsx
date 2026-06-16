@@ -1,10 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Button, Canvas } from '@tarojs/components';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Button, Image } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import styles from './index.module.scss';
 import { Product } from '@/types';
-import { generateQRCode } from '@/utils/qrcode';
+import { generateQRCode, generateQRCodeDataURL } from '@/utils/qrcode';
 
 interface QrCodeModalProps {
   visible: boolean;
@@ -13,119 +13,122 @@ interface QrCodeModalProps {
 }
 
 const QrCodeModal: React.FC<QrCodeModalProps> = ({ visible, product, onClose }) => {
-  const canvasRef = useRef<any>(null);
-  const [qrGenerated, setQrGenerated] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState('');
+  const [qrText, setQrText] = useState('');
 
   useEffect(() => {
-    if (visible && product && canvasRef.current) {
+    if (visible && product) {
       generateQR();
+    } else {
+      setQrDataUrl('');
+      setQrText('');
     }
   }, [visible, product]);
 
   const generateQR = () => {
     if (!product) return;
 
-    const qrData = JSON.stringify({
+    const resumeData = {
+      type: 'baby_resume',
+      version: '1.0',
       productId: product.id,
       title: product.title,
-      hygieneScore: product.reviews.length > 0
-        ? (product.reviews.reduce((sum, r) => sum + r.hygieneScore, 0) / product.reviews.length).toFixed(1)
-        : '5.0',
+      category: product.categoryName,
+      price: product.price,
+      condition: product.conditionText,
+      useMonths: product.useMonths,
       disinfectionCount: product.disinfectionRecords.length,
       transferCount: product.transferRecords.length,
+      reviewCount: product.reviews.length,
+      avgHygieneScore: product.reviews.length > 0
+        ? (product.reviews.reduce((s, r) => s + r.hygieneScore, 0) / product.reviews.length
+        : 5,
+      avgDescriptionScore: product.reviews.length > 0
+        ? (product.reviews.reduce((s, r) => s + r.descriptionScore, 0) / product.reviews.length)
+        : 5,
+      isHighRisk: product.isHighRisk,
+      seller: product.sellerName,
+      publishDate: product.publishDate,
       timestamp: Date.now()
-    });
+    };
 
-    console.log('[QrCodeModal] Generating QR for:', qrData);
+    const qrData = JSON.stringify(resumeData);
+    setQrText(qrData);
+
+    console.log('[QrCodeModal] Generating QR data length:', qrData.length);
 
     try {
-      const modules = generateQRCode(qrData, 'M');
-      const canvas = canvasRef.current;
-
-      if (canvas && process.env.TARO_ENV === 'h5') {
-        const canvasEl = document.getElementById('qr-canvas') as HTMLCanvasElement;
-        if (canvasEl) {
-          const ctx = canvasEl.getContext('2d');
-          if (ctx) {
-            const size = 300;
-            const moduleSize = size / modules.length;
-            canvasEl.width = size;
-            canvasEl.height = size;
-
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, size, size);
-
-            ctx.fillStyle = '#1D2129';
-            for (let row = 0; row < modules.length; row++) {
-              for (let col = 0; col < modules[row].length; col++) {
-                if (modules[row][col]) {
-                  ctx.fillRect(
-                    col * moduleSize,
-                    row * moduleSize,
-                    moduleSize,
-                    moduleSize
-                  );
-                }
-              }
-            }
-            setQrGenerated(true);
-          }
-        }
-      } else {
-        Taro.createSelectorQuery()
-          .select('#qr-canvas')
-          .fields({ node: true, size: true })
-          .exec((res) => {
-            if (res && res[0]) {
-              const canvasNode = res[0].node;
-              const ctx = canvasNode.getContext('2d');
-              const dpr = Taro.getSystemInfoSync().pixelRatio;
-              const size = 300;
-              canvasNode.width = size * dpr;
-              canvasNode.height = size * dpr;
-              ctx.scale(dpr, dpr);
-
-              const moduleSize = size / modules.length;
-              ctx.fillStyle = '#ffffff';
-              ctx.fillRect(0, 0, size, size);
-              ctx.fillStyle = '#1D2129';
-
-              for (let row = 0; row < modules.length; row++) {
-                for (let col = 0; col < modules[row].length; col++) {
-                  if (modules[row][col]) {
-                    ctx.fillRect(
-                      col * moduleSize,
-                      row * moduleSize,
-                      moduleSize,
-                      moduleSize
-                    );
-                  }
-                }
-              }
-              setQrGenerated(true);
-            }
-          });
-      }
+      const dataUrl = generateQRCodeDataURL(qrData, 300);
+      setQrDataUrl(dataUrl);
+      console.log('[QrCodeModal] QR generated successfully, size:', dataUrl.length);
     } catch (err) {
       console.error('[QrCodeModal] QR generation error:', err);
+      Taro.showToast({
+        title: '二维码生成失败',
+        icon: 'none'
+      });
     }
   };
 
-  const handleShare = () => {
-    Taro.showToast({
-      title: '长按二维码可保存分享',
-      icon: 'none',
-      duration: 2000
-    });
+  const handleShare = async () => {
     console.log('[QrCodeModal] Share QR code');
+
+    if (process.env.TARO_ENV === 'h5') {
+      try {
+        if (navigator.clipboard && qrText) {
+          await navigator.clipboard.writeText(qrText);
+          Taro.showModal({
+            title: '已复制履历信息',
+            content: '履历数据已复制到剪贴板，可粘贴分享给好友查看消毒履历',
+            showCancel: false
+          });
+          return;
+        }
+      } catch (e) {
+        console.warn('[QrCodeModal] Clipboard copy failed:', e);
+      }
+      Taro.showToast({
+        title: '长按二维码可保存图片分享',
+        icon: 'none',
+        duration: 2000
+      });
+    } else {
+      Taro.showToast({
+        title: '分享功能开发中',
+        icon: 'none'
+      });
+    }
   };
 
   const handleSave = () => {
-    Taro.showToast({
-      title: '二维码已保存到相册',
-      icon: 'success'
-    });
     console.log('[QrCodeModal] Save QR code to album');
+
+    if (process.env.TARO_ENV === 'h5' && qrDataUrl) {
+      try {
+        const link = document.createElement('a');
+        link.download = `${product?.title || '消毒履历二维码'}.png`;
+        link.href = qrDataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        Taro.showToast({
+          title: '二维码已下载',
+          icon: 'success'
+        });
+      } catch (e) {
+        console.error('[QrCodeModal] Save failed:', e);
+        Taro.showToast({
+          title: '保存失败',
+          icon: 'none'
+        });
+      }
+    } else {
+      Taro.showToast({
+        title: '长按图片保存',
+        icon: 'none'
+      });
+    }
   };
 
   if (!visible || !product) return null;
@@ -167,25 +170,26 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ visible, product, onClose }) 
         </View>
 
         <View className={styles.qrContainer}>
-          {process.env.TARO_ENV === 'h5' ? (
-            <canvas
-              id='qr-canvas'
-              className={styles.qrCanvas}
-              ref={canvasRef}
+          {qrDataUrl ? (
+            <Image
+              className={styles.qrImage}
+              src={qrDataUrl}
+              mode='aspectFit'
+              onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            <Canvas
-              id='qr-canvas'
-              type='2d'
-              className={styles.qrCanvas}
-              ref={canvasRef}
-            />
+            <View className={styles.qrLoading}>
+              <Text style={{ fontSize: 48 }}>⏳</Text>
+              <Text style={{ fontSize: 24, color: '#999', marginTop: 16 }}>
+                二维码生成中...
+              </Text>
+            </View>
           )}
         </View>
 
         <View className={styles.tip}>
           <Text className={styles.tipText}>
-            💡 该二维码包含商品完整的消毒履历，交易完成后可一键过户给下一任买家
+          💡 该二维码包含商品完整的消毒履历，交易完成后可一键过户给下一任买家
           </Text>
         </View>
 
